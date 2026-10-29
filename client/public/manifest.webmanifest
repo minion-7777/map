@@ -1,0 +1,18 @@
+{
+  "name": "Dandong Map",
+  "short_name": "Dandong",
+  "description": "Offline map of places in Dandong.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#d5e1cc",
+  "theme_color": "#143646",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

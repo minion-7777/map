@@ -1,0 +1,15 @@
+{
+  "name": "dandong-map-client",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3000",
+    "build": "next build"
+  },
+  "dependencies": {
+    "leaflet": "^1.9.4",
+    "next": "^15.5.6",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-leaflet": "^5.0.0"
+  }
+}

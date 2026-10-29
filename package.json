@@ -1,0 +1,16 @@
+{
+  "name": "dandong-map",
+  "private": true,
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "dev": "concurrently -n api,web -c cyan,green \"npm run dev -w dandong-map-server\" \"npm run dev -w dandong-map-client\"",
+    "build": "npm run build -w dandong-map-client",
+    "start": "npm run start -w dandong-map-server"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

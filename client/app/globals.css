@@ -1,0 +1,408 @@
+:root {
+  --ink: #16242c;
+  --ink-soft: #526068;
+  --paper: #f4efe6;
+  --paper-2: #e7dfd2;
+  --line: #d9d0c2;
+  --river: #1d5f73;
+  --river-deep: #143646;
+  --amber: #c65b2e;
+  --land: #d5e1cc;
+  --good: #1f6a45;
+  --bad: #8d2f2f;
+  --cat-manufacturing: #c65b2e;
+  --cat-trade: #1d5f73;
+  --cat-logistics: #1f5f8b;
+  --cat-tourism: #2f7d4a;
+  --cat-service: #8a6232;
+  --cat-food: #c9842a;
+  --cat-other: #5c6b73;
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", "Malgun Gothic", sans-serif;
+  color: var(--ink);
+  background: var(--river-deep);
+}
+
+button, input, select, textarea { font: inherit; }
+
+button { cursor: pointer; }
+
+:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 2px;
+}
+
+.app {
+  display: grid;
+  grid-template-columns: minmax(320px, 400px) minmax(0, 1fr);
+  height: 100dvh;
+}
+
+.side {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--paper);
+  color: var(--ink);
+  border-right: 1px solid #cfc4b2;
+}
+
+.brand {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 18px 18px 8px;
+}
+
+.brand-mark {
+  width: 42px;
+  height: 42px;
+  flex: none;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 42%, var(--amber) 0 5px, transparent 6px),
+    linear-gradient(var(--river), var(--river)) center 70% / 100% 7px no-repeat,
+    var(--river-deep);
+}
+
+.brand h1, .detail h2, .form h2, .list-head h2 {
+  font-family: "Palatino Linotype", Palatino, "Songti SC", serif;
+  font-weight: 600;
+  margin: 0;
+}
+
+.brand h1 {
+  font-size: 28px;
+  line-height: 1;
+  letter-spacing: 0.01em;
+}
+
+.brand-kicker, .eyebrow {
+  margin: 0;
+  color: var(--amber);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.brand-zh {
+  margin: 2px 0 0;
+  color: var(--ink-soft);
+}
+
+.status {
+  margin: 8px 18px 0;
+  color: var(--ink-soft);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.toolbar, .offline-actions, .form-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.toolbar, .offline-actions { padding: 12px 18px 0; }
+
+.search, .form input, .form select, .form textarea {
+  width: 100%;
+  color: var(--ink);
+  background: #fffdf8;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.toolbar .search { flex: 1 1 160px; width: auto; }
+
+.btn {
+  border: 0;
+  border-radius: 999px;
+  padding: 9px 14px;
+  background: var(--river-deep);
+  color: #f4efe6;
+}
+
+.btn.secondary {
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--line);
+}
+
+.btn.danger {
+  background: transparent;
+  color: var(--bad);
+  border: 1px solid #e4c6c2;
+}
+
+.btn:disabled { opacity: 0.55; cursor: default; }
+
+.hint {
+  margin: 8px 18px 0;
+  color: var(--ink-soft);
+  font-size: 13px;
+}
+
+.side-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 12px 18px 24px;
+}
+
+.chips {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+
+.chips button {
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 5px 10px;
+  white-space: nowrap;
+}
+
+.chips button[aria-pressed="true"] {
+  background: var(--river-deep);
+  border-color: var(--river-deep);
+  color: #f4efe6;
+}
+
+.form, .detail {
+  margin-top: 8px;
+  padding: 14px;
+  background: #fffdf8;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+
+.form { display: grid; gap: 10px; }
+
+.form h2, .detail h2 { font-size: 22px; }
+
+.form label {
+  display: grid;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.form .hint, .detail .hint { margin: 0; }
+
+.coord-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+.form textarea { min-height: 84px; resize: vertical; }
+
+.form-error { margin: 0; color: var(--bad); font-size: 13px; }
+
+.detail p { margin: 6px 0 0; }
+
+.coords, .place-meta {
+  color: var(--ink-soft);
+  font-size: 13px;
+}
+
+.place-zh { display: block; color: var(--ink-soft); font-size: 13px; }
+
+.list-head { margin-top: 16px; }
+
+.list-head h2 { font-size: 18px; }
+
+.place-list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.place-card {
+  width: 100%;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  text-align: left;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: inherit;
+}
+
+.place-card:hover, .place-card.is-selected {
+  background: #fffdf8;
+  border-color: var(--line);
+}
+
+.place-card.is-selected { box-shadow: inset 3px 0 0 var(--amber); }
+
+.place-name { display: block; font-weight: 600; }
+
+.dot {
+  width: 10px;
+  height: 10px;
+  margin-top: 5px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.cat-manufacturing { background: var(--cat-manufacturing); }
+.cat-trade { background: var(--cat-trade); }
+.cat-logistics { background: var(--cat-logistics); }
+.cat-tourism { background: var(--cat-tourism); }
+.cat-service { background: var(--cat-service); }
+.cat-food { background: var(--cat-food); }
+.cat-other { background: var(--cat-other); }
+
+.map-wrap { position: relative; min-height: 0; }
+
+.dandong-map, .leaflet-container, .map-fallback {
+  height: 100%;
+  width: 100%;
+  background: #c9d7c4;
+}
+
+.map-fallback {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  color: var(--river-deep);
+}
+
+.map-fallback p {
+  margin: 0;
+  font-family: "Palatino Linotype", Palatino, serif;
+  font-size: 42px;
+}
+
+.map-fallback span { color: var(--ink-soft); }
+
+.map-status {
+  position: absolute;
+  z-index: 500;
+  top: 12px;
+  left: 12px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  max-width: calc(100% - 70px);
+}
+
+.chip, .home-btn {
+  border-radius: 999px;
+  padding: 7px 12px;
+  background: rgba(244, 239, 230, 0.94);
+  color: var(--ink);
+  border: 1px solid rgba(20, 54, 70, 0.12);
+  box-shadow: 0 8px 24px rgba(20, 36, 48, 0.12);
+}
+
+.chip-off { background: var(--river-deep); color: #f4efe6; }
+
+.home-btn { cursor: pointer; }
+
+.leaflet-div-icon.pin-wrap,
+.leaflet-div-icon.city-label {
+  background: transparent;
+  border: 0;
+}
+
+.pin {
+  width: 16px;
+  height: 16px;
+  margin: 6px;
+  display: block;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+}
+
+.pin.is-selected {
+  width: 20px;
+  height: 20px;
+  margin: 4px;
+  box-shadow: 0 0 0 4px rgba(198, 91, 46, 0.35), 0 1px 4px rgba(0, 0, 0, 0.35);
+}
+
+.pin-manufacturing { background: var(--cat-manufacturing); }
+.pin-trade { background: var(--cat-trade); }
+.pin-logistics { background: var(--cat-logistics); }
+.pin-tourism { background: var(--cat-tourism); }
+.pin-service { background: var(--cat-service); }
+.pin-food { background: var(--cat-food); }
+.pin-other { background: var(--cat-other); }
+
+.city-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: var(--river-deep);
+  text-shadow: 0 1px 0 #f4efe6, 0 0 4px #f4efe6;
+  line-height: 1.15;
+}
+
+.city-label strong { font-size: 14px; }
+.city-label em { font-style: normal; font-size: 12px; }
+
+.leaflet-tooltip.place-tip {
+  background: var(--river-deep);
+  color: #f4efe6;
+  border: 0;
+  border-radius: 8px;
+  box-shadow: none;
+  padding: 4px 8px;
+}
+
+.leaflet-tooltip.place-tip::before { border-top-color: var(--river-deep); }
+
+.tip-title, .tip-zh { display: block; }
+.tip-zh { color: #eadfce; font-size: 12px; }
+
+.leaflet-control-zoom a {
+  background: #f4efe6;
+  color: var(--river-deep);
+  border-color: #d9d0c2;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+@media (max-width: 800px) {
+  .app {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(220px, 1fr) minmax(240px, 48dvh);
+  }
+
+  .side { order: 2; border-right: 0; border-top: 1px solid #cfc4b2; }
+  .map-wrap { order: 1; }
+  .brand { padding-top: 12px; }
+  .brand h1 { font-size: 24px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { scroll-behavior: auto !important; }
+}
