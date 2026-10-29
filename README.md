@@ -35,3 +35,15 @@ The Dandong street map is stored in this project and loaded from this computer, 
 Add, edit, delete, and search write to this browser first, then to local MySQL. That save does not need an internet connection. **Sync** sends anything still waiting. If two copies of a company both changed, the later edit wins.
 
 Dragging a selected pin updates its location.
+
+
+Then create the startup task:
+
+Press Win+R, type taskschd.msc, and press Enter.
+Choose Create Basic Task.
+Name it Dandong Map.
+Trigger: When I log on.
+Action: Start a program.
+Program: C:\nvm4w\nodejs\npm.cmd
+Arguments: start
+Start in: D:\00_Work\00_Projects\Map

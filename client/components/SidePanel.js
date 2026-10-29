@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { categoryTone } from "../lib/validate";
 import { PlaceForm } from "./PlaceForm";
 import { usePlaces } from "./PlacesProvider";
@@ -39,6 +40,20 @@ export function SidePanel() {
     setConfirming(false);
   }, [selected?.id, mode]);
 
+  useEffect(() => {
+    if (mode === "view" && !confirming) return undefined;
+    function onKey(event) {
+      if (event.key !== "Escape") return;
+      if (confirming) {
+        setConfirming(false);
+        return;
+      }
+      cancelEdit();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [confirming, mode, cancelEdit]);
+
   const filtering = Boolean(query) || category !== "all";
 
   return (
@@ -47,8 +62,7 @@ export function SidePanel() {
         <div className="brand">
           <span className="brand-mark" aria-hidden="true" />
           <div>
-            <h1>Dandong Map</h1>
-            <p className="brand-zh">丹东</p>
+            <h1>단동회사지도</h1>
           </div>
         </div>
 
@@ -72,9 +86,9 @@ export function SidePanel() {
         </div>
 
         <div className="offline-actions">
-          <button className="btn secondary" type="button" onClick={saveTiles} disabled={tileJob?.running}>
+          {/* <button className="btn secondary" type="button" onClick={saveTiles} disabled={tileJob?.running}>
             {tileJob?.running ? `지도보관중 ${tileJob.done}/${tileJob.total}` : "지도보관"}
-          </button>
+          </button> */}
         </div>
       </header>
       <div className="side-stage">
@@ -98,20 +112,6 @@ export function SidePanel() {
         </div>
 
         {!ready && !bootError && <p className="hint">회사를 불러오는중입니다…</p>}
-
-        {mode !== "view" && draft && (
-          <PlaceForm
-            key={mode === "add" ? "add" : draft.id}
-            draft={draft}
-            error={formError}
-            busy={busy}
-            mode={mode}
-            onChange={updateDraft}
-            onSave={saveDraft}
-            onCancel={cancelEdit}
-            onDelete={removeSelected}
-          />
-        )}
 
         {mode === "view" && selected && (
           <article className="detail">
@@ -152,22 +152,10 @@ export function SidePanel() {
               <button className="btn" type="button" onClick={startEdit}>
                 편집
               </button>
-              {confirming ? (
-                <>
-                  <button className="btn danger" type="button" onClick={removeSelected} disabled={busy}>
-                    삭제
-                  </button>
-                  <button className="btn secondary" type="button" onClick={() => setConfirming(false)}>
-                    취소
-                  </button>
-                </>
-              ) : (
-                <button className="btn danger" type="button" onClick={() => setConfirming(true)}>
-                  삭제
-                </button>
-              )}
+              <button className="btn danger" type="button" onClick={() => setConfirming(true)}>
+                삭제
+              </button>
             </div>
-            {confirming && <p className="confirm-note">회사를 지도에서 삭제하시겠습니까?</p>}
           </article>
         )}
       </div>
@@ -206,6 +194,49 @@ export function SidePanel() {
         </ul>
         {ready && filtered.length === 0 && <p className="hint">회사가 없습니다.</p>}
       </div>
+
+      {mode !== "view" && draft && (
+        <div className="modal-layer">
+          <button className="modal-shade" type="button" aria-label="닫기" onClick={cancelEdit} />
+          <div className="modal-card" role="dialog" aria-labelledby="company-form-title">
+            <PlaceForm
+              key={mode === "add" ? "add" : draft.id}
+              draft={draft}
+              error={formError}
+              busy={busy}
+              mode={mode}
+              onChange={updateDraft}
+              onSave={saveDraft}
+              onCancel={cancelEdit}
+              onDelete={() => setConfirming(true)}
+            />
+          </div>
+        </div>
+      )}
+
+      {confirming &&
+        selected &&
+        createPortal(
+          <div className="modal-layer is-blocking">
+            <button className="modal-shade" type="button" aria-label="닫기" onClick={() => setConfirming(false)} />
+            <div className="modal-card modal-confirm" role="dialog" aria-modal="true" aria-labelledby="delete-title">
+              <h2 id="delete-title">삭제</h2>
+              <p>회사를 지도에서 삭제하시겠습니까?</p>
+              <p className="confirm-name">
+                {selected.companyNumber} · {selected.companyName}
+              </p>
+              <div className="form-actions">
+                <button className="btn danger" type="button" onClick={removeSelected} disabled={busy}>
+                  삭제
+                </button>
+                <button className="btn secondary" type="button" onClick={() => setConfirming(false)} disabled={busy}>
+                  취소
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
     </aside>
   );
 }

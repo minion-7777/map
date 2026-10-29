@@ -35,6 +35,7 @@ export default function App() {
         <div className="map-wrap">
           <MapView />
           <MapChrome />
+          <p className="map-credit">© OpenStreetMap</p>
         </div>
       </div>
     </PlacesProvider>

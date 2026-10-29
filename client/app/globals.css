@@ -27,8 +27,16 @@ html, body {
   height: 100%;
 }
 
+@font-face {
+  font-family: "KP Chopom";
+  src: url("/fonts/KPCHOPOM.ttf") format("truetype");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 body {
-  font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", "Malgun Gothic", sans-serif;
+  font-family: "KP Chopom", "Segoe UI", "PingFang SC", "Microsoft YaHei", "Malgun Gothic", sans-serif;
   color: var(--ink);
   background: var(--river-deep);
 }
@@ -49,6 +57,7 @@ button { cursor: pointer; }
 }
 
 .side {
+  position: relative;
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -91,7 +100,7 @@ button { cursor: pointer; }
 }
 
 .brand h1 {
-  font-family: "Palatino Linotype", Palatino, "Songti SC", serif;
+  font-family: "KP Chopom", "Palatino Linotype", Palatino, "Songti SC", serif;
   font-size: 26px;
   line-height: 1;
   letter-spacing: -0.02em;
@@ -251,6 +260,86 @@ button { cursor: pointer; }
 .form { display: grid; gap: 14px; padding: 16px; }
 
 .form h2, .list-head h2 { font-size: 15px; letter-spacing: -0.01em; }
+
+.form-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.modal-close {
+  width: 32px;
+  height: 32px;
+  flex: none;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-soft);
+  font-size: 22px;
+  line-height: 1;
+}
+
+.modal-close:hover { background: var(--paper-2); }
+
+.modal-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.modal-shade {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  background: rgba(20, 36, 48, 0.38);
+}
+
+.modal-card {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 380px);
+  max-height: calc(100% - 8px);
+  overflow: auto;
+}
+
+.modal-layer.is-blocking {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 2000;
+  padding: 24px;
+}
+
+.modal-layer.is-blocking .modal-shade {
+  background: rgba(20, 36, 48, 0.46);
+}
+
+.modal-confirm {
+  width: min(100%, 360px);
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+  background: #fffdf8;
+  border: 1px solid rgba(217, 208, 194, 0.95);
+  border-radius: 18px;
+  box-shadow: 0 24px 60px rgba(20, 36, 48, 0.24);
+}
+
+.modal-confirm h2 { margin: 0; font-size: 18px; }
+
+.modal-confirm p { margin: 0; color: var(--ink-soft); line-height: 1.45; }
+
+.confirm-name { color: var(--ink); font-weight: 650; }
+
+.modal-confirm .form-actions { padding: 4px 0 0; }
 
 .form label {
   display: grid;
@@ -464,6 +553,7 @@ button { cursor: pointer; }
   height: 100%;
   width: 100%;
   background: #c9d7c4;
+  font-family: "KP Chopom", "Segoe UI", "PingFang SC", "Microsoft YaHei", "Malgun Gothic", sans-serif;
 }
 
 .map-fallback {
@@ -480,6 +570,19 @@ button { cursor: pointer; }
 }
 
 .map-fallback span { color: var(--ink-soft); }
+
+.map-credit {
+  position: absolute;
+  z-index: 500;
+  right: 8px;
+  bottom: 6px;
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 11px;
+  background: rgba(244, 239, 230, 0.88);
+  border-radius: 999px;
+  padding: 2px 8px;
+}
 
 .map-status {
   position: absolute;
@@ -546,9 +649,37 @@ button { cursor: pointer; }
 .leaflet-tooltip.building-tip::before { border-top-color: var(--river-deep); }
 
 .leaflet-div-icon.pin-wrap,
-.leaflet-div-icon.city-label {
+.leaflet-div-icon.city-label,
+.leaflet-div-icon.map-name {
   background: transparent;
   border: 0;
+  overflow: visible;
+}
+
+.map-name span {
+  position: absolute;
+  left: 0;
+  top: 0;
+  white-space: nowrap;
+  font-size: 11px;
+  font-weight: 650;
+  line-height: 1;
+  color: #3d342c;
+  text-shadow: 0 0 3px #f6f1e8, 0 0 3px #f6f1e8, 0 1px 0 #f6f1e8;
+  pointer-events: none;
+}
+
+.map-name-major span { color: #8a3b1c; font-size: 12px; }
+.map-name-water span { color: #1d5c74; }
+.map-name-building span,
+.map-name-urban span,
+.map-name-green span {
+  font-size: 12px;
+  font-weight: 600;
+  color: #2c241c;
+  background: rgba(246, 240, 230, 0.9);
+  padding: 1px 4px;
+  border-radius: 4px;
 }
 
 .pin {

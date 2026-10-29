@@ -1,9 +1,6 @@
 "use client";
 
-import { useState } from "react";
-
 export function PlaceForm({ draft, error, busy, mode, onChange, onSave, onCancel, onDelete }) {
-  const [confirming, setConfirming] = useState(false);
   return (
     <form
       className="form"
@@ -12,7 +9,12 @@ export function PlaceForm({ draft, error, busy, mode, onChange, onSave, onCancel
         onSave();
       }}
     >
-      <h2>{mode === "add" ? "회사등록" : "회사편집"}</h2>
+      <div className="form-title">
+        <h2 id="company-form-title">{mode === "add" ? "회사등록" : "회사편집"}</h2>
+        <button className="modal-close" type="button" onClick={onCancel} aria-label="닫기">
+          ×
+        </button>
+      </div>
       <div className="field-grid">
         <label>
           번호
@@ -21,6 +23,7 @@ export function PlaceForm({ draft, error, busy, mode, onChange, onSave, onCancel
             min={1}
             step={1}
             required
+            autoFocus
             value={draft.companyNumber ?? ""}
             onChange={(event) =>
               onChange("companyNumber", event.target.value === "" ? null : Number(event.target.value))
@@ -107,20 +110,10 @@ export function PlaceForm({ draft, error, busy, mode, onChange, onSave, onCancel
         <button className="btn secondary" type="button" onClick={onCancel}>
           취소
         </button>
-        {mode === "edit" && !confirming && (
-          <button className="btn danger" type="button" onClick={() => setConfirming(true)} disabled={busy}>
+        {mode === "edit" && (
+          <button className="btn danger" type="button" onClick={onDelete} disabled={busy}>
             삭제
           </button>
-        )}
-        {mode === "edit" && confirming && (
-          <>
-            <button className="btn danger" type="button" onClick={onDelete} disabled={busy}>
-              삭제
-            </button>
-            <button className="btn secondary" type="button" onClick={() => setConfirming(false)}>
-              취소
-            </button>
-          </>
         )}
       </div>
     </form>

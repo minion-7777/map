@@ -1,21 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { MapContainer, Marker, Polygon, Rectangle, TileLayer, Tooltip, ZoomControl, useMap, useMapEvents } from "react-leaflet";
+import { MapContainer, GeoJSON, Marker, Rectangle, Tooltip, ZoomControl, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import { usePlaces } from "./PlacesProvider";
 import { categoryTone } from "../lib/validate";
-
-const CENTERLINE = [
-  [40.23, 124.52],
-  [40.18, 124.45],
-  [40.145, 124.41],
-  [40.12, 124.398],
-  [40.11, 124.385],
-  [40.09, 124.36],
-  [40.05, 124.34],
-  [40.02, 124.3],
-];
+import basemap from "../data/basemap.json";
 
 const ICONS = {};
 const LABELS = {};
@@ -47,21 +37,40 @@ function cityLabel(title, subtitle) {
   return LABELS[key];
 }
 
-function bufferLine(points, half) {
-  const left = [];
-  const right = [];
-  for (let index = 0; index < points.length; index += 1) {
-    const previous = points[Math.max(0, index - 1)];
-    const next = points[Math.min(points.length - 1, index + 1)];
-    const dx = next[1] - previous[1];
-    const dy = next[0] - previous[0];
-    const length = Math.hypot(dx, dy) || 1;
-    const nx = -dy / length;
-    const ny = dx / length;
-    left.push([points[index][0] + nx * half, points[index][1] + ny * half]);
-    right.push([points[index][0] - nx * half, points[index][1] - ny * half]);
+function basemapPoint(feature, latlng) {
+  return L.circleMarker(latlng, {
+    interactive: false,
+    radius: 5,
+    color: "#8d5a34",
+    weight: 1.2,
+    fillColor: "#f3d7b0",
+    fillOpacity: 1,
+  });
+}
+
+function basemapStyle(feature) {
+  const kind = feature.properties?.kind;
+  const line = String(feature.geometry?.type || "").includes("Line");
+  const quiet = { interactive: false };
+  if (kind === "water") {
+    return line
+      ? { ...quiet, color: "#3f7f96", weight: 1.8, opacity: 0.95 }
+      : { ...quiet, color: "#6eabc2", weight: 0.4, fillColor: "#7eb4c8", fillOpacity: 0.92 };
   }
-  return [...left, ...right.reverse()];
+  if (kind === "green") {
+    return { ...quiet, color: "#b7c9aa", weight: 0.4, fillColor: "#c5d6b6", fillOpacity: 0.9 };
+  }
+  if (kind === "urban") {
+    return { ...quiet, color: "#ddd0bc", weight: 0.4, fillColor: "#e6dccb", fillOpacity: 0.75 };
+  }
+  if (kind === "building" || kind === "landmark") {
+    return { ...quiet, color: "#c2b29c", weight: 0.45, fillColor: "#f6f0e6", fillOpacity: 0.95 };
+  }
+  if (kind === "major") return { ...quiet, color: "#c65b2e", weight: 2.6, opacity: 0.95 };
+  if (kind === "road") return { ...quiet, color: "#a67c52", weight: 1.7, opacity: 0.9 };
+  if (kind === "rail") return { ...quiet, color: "#4e5d66", weight: 1.3, opacity: 0.75, dashArray: "5 4" };
+  if (kind === "path") return { ...quiet, color: "#c4b8a6", weight: 0.7, opacity: 0.75 };
+  return { ...quiet, color: "#b7ab9c", weight: 1.05, opacity: 0.9 };
 }
 
 function Schematic() {
@@ -86,11 +95,6 @@ function Schematic() {
         ]}
         pathOptions={{ stroke: false, fillColor: "#d5e1cc", fillOpacity: 1 }}
       />
-      <Polygon
-        pane="schematic"
-        positions={bufferLine(CENTERLINE, 0.007)}
-        pathOptions={{ stroke: false, fillColor: "#7eafc4", fillOpacity: 1 }}
-      />
       <Marker pane="schematic" position={[40.155, 124.34]} icon={cityLabel("Dandong", "丹东")} interactive={false} />
       <Marker pane="schematic" position={[40.1, 124.43]} icon={cityLabel("Sinuiju", "신의주")} interactive={false} />
     </>
@@ -105,6 +109,125 @@ function Focus({ focus }) {
     map.flyTo([focus.lat, focus.lng], focus.zoom, { duration: reduce ? 0 : 0.7 });
   }, [focus, map]);
   return null;
+}
+
+const NAME_ZOOM = { major: 12, road: 13, street: 13, water: 13, rail: 14, urban: 14, green: 15, building: 14, path: 16 };
+const NAME_RANK = { major: 0, road: 1, water: 1, street: 2, rail: 3, urban: 4, green: 4, building: 4, path: 5 };
+const NAME_ICONS = {};
+
+function escapeHtml(value) {
+  return value.replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]));
+}
+
+function lineAnchor(geometry) {
+  const lines = geometry.type === "LineString" ? [geometry.coordinates] : geometry.coordinates;
+  let best = 0;
+  let lat = 0;
+  let lng = 0;
+  let angle = 0;
+  lines.forEach((line) => {
+    for (let index = 1; index < line.length; index += 1) {
+      const dx = line[index][0] - line[index - 1][0];
+      const dy = line[index][1] - line[index - 1][1];
+      const midLat = (line[index][1] + line[index - 1][1]) / 2;
+      const dxm = dx * Math.cos((midLat * Math.PI) / 180);
+      const length = Math.hypot(dxm, dy);
+      if (length <= best) continue;
+      best = length;
+      lng = (line[index][0] + line[index - 1][0]) / 2;
+      lat = midLat;
+      let degrees = (Math.atan2(-dy, dxm) * 180) / Math.PI;
+      if (degrees > 90) degrees -= 180;
+      if (degrees < -90) degrees += 180;
+      angle = degrees;
+    }
+  });
+  if (!best) return null;
+  return { lat, lng, angle, length: best };
+}
+
+function areaAnchor(geometry) {
+  const ring = (geometry.type === "Polygon" ? geometry.coordinates : geometry.coordinates[0])[0];
+  if (!ring || ring.length < 3) return null;
+  const closed = ring[0][0] === ring[ring.length - 1][0] && ring[0][1] === ring[ring.length - 1][1];
+  const count = closed ? ring.length - 1 : ring.length;
+  let lng = 0;
+  let lat = 0;
+  for (let index = 0; index < count; index += 1) {
+    lng += ring[index][0];
+    lat += ring[index][1];
+  }
+  return { lng: lng / count, lat: lat / count, angle: 0, length: 1 };
+}
+
+const NAME_LABELS = basemap.features.flatMap((feature, index) => {
+  const name = feature.properties?.name;
+  const kind = feature.properties?.kind;
+  if (!name || NAME_ZOOM[kind] == null) return [];
+  const line = String(feature.geometry?.type || "").includes("Line");
+  const anchor = line ? lineAnchor(feature.geometry) : areaAnchor(feature.geometry);
+  if (!anchor) return [];
+  return [{ id: index, name, kind, minZoom: NAME_ZOOM[kind], rank: NAME_RANK[kind], line, ...anchor }];
+});
+
+function nameIcon(item) {
+  const angle = item.line ? Math.round(item.angle) : 0;
+  const key = `${item.kind}:${angle}:${item.name}`;
+  if (!NAME_ICONS[key]) {
+    NAME_ICONS[key] = L.divIcon({
+      className: `map-name map-name-${item.kind}`,
+      html: `<span style="transform:translate(-50%,-50%) rotate(${angle}deg)">${escapeHtml(item.name)}</span>`,
+      iconSize: [1, 1],
+      iconAnchor: [0, 0],
+    });
+  }
+  return NAME_ICONS[key];
+}
+
+function NameLabels() {
+  const map = useMap();
+  const [labels, setLabels] = useState([]);
+
+  useEffect(() => {
+    if (!map.getPane("names")) {
+      const pane = map.createPane("names");
+      pane.style.zIndex = "450";
+      pane.style.pointerEvents = "none";
+    }
+    const update = () => {
+      const zoom = map.getZoom();
+      const bounds = map.getBounds().pad(0.2);
+      const placed = [];
+      const visible = [];
+      const candidates = NAME_LABELS.filter((item) => zoom >= item.minZoom && bounds.contains([item.lat, item.lng]));
+      candidates.sort((a, b) => {
+        if (zoom >= 14 && a.line !== b.line) return a.line ? 1 : -1;
+        return a.rank - b.rank || b.length - a.length;
+      });
+      const pixelsPerDegree = (256 * 2 ** zoom) / 360;
+      candidates.forEach((item) => {
+        if (item.line && item.length * pixelsPerDegree < 56) return;
+        const point = map.latLngToContainerPoint([item.lat, item.lng]);
+        const crowded = placed.some((other) => {
+          const distance = Math.hypot(other.x - point.x, other.y - point.y);
+          if (other.name === item.name) return distance < 110;
+          if (!item.line || !other.line) return distance < 16;
+          return distance < 48;
+        });
+        if (crowded || visible.length >= 180) return;
+        placed.push({ x: point.x, y: point.y, name: item.name });
+        visible.push(item);
+      });
+      setLabels(visible);
+    };
+    update();
+    map.on("moveend zoomend", update);
+    return () => map.off("moveend zoomend", update);
+  }, [map]);
+
+  return labels.map((item) => (
+    <Marker key={item.id} pane="names" position={[item.lat, item.lng]} icon={nameIcon(item)} interactive={false} />
+  ));
 }
 
 function ClickCatcher() {
@@ -132,13 +255,8 @@ export default function MapView() {
     >
       <ZoomControl position="topright" />
       <Schematic />
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-        crossOrigin="anonymous"
-        errorTileUrl="/tile-empty.png"
-        maxZoom={19}
-      />
+      <GeoJSON data={basemap} style={basemapStyle} pointToLayer={basemapPoint} />
+      <NameLabels />
       <Focus focus={focus} />
       <ClickCatcher />
       {places.map((place) => {

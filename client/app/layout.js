@@ -2,7 +2,7 @@ import "leaflet/dist/leaflet.css";
 import "./globals.css";
 
 export const metadata = {
-  title: "Dandong Map",
+  title: "단동회사목록",
   description: "단동회사목록 조회 및 등록 ",
   manifest: "/manifest.webmanifest",
   icons: { icon: "/icon.svg" },
