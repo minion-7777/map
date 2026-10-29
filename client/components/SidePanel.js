@@ -39,56 +39,48 @@ export function SidePanel() {
     setConfirming(false);
   }, [selected?.id, mode]);
 
+  const filtering = Boolean(query) || category !== "all";
+
   return (
     <aside className="side">
-      <header className="brand">
-        <span className="brand-mark" aria-hidden="true" />
-        <div>
-          <h1>Dandong Map</h1>
-          <p className="brand-zh">丹东</p>
+      <header className="side-head">
+        <div className="brand">
+          <span className="brand-mark" aria-hidden="true" />
+          <div>
+            <h1>Dandong Map</h1>
+            <p className="brand-zh">丹东</p>
+          </div>
+        </div>
+
+        <div className="toolbar">
+          <label className="sr-only" htmlFor="search">
+            회사검색
+          </label>
+          <input
+            id="search"
+            className="search"
+            placeholder="회사검색"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" && filtered[0]) select(filtered[0].id);
+            }}
+          />
+          <button className="btn" type="button" onClick={startAdd}>
+            회사등록
+          </button>
+        </div>
+
+        <div className="offline-actions">
+          <button className="btn secondary" type="button" onClick={saveTiles} disabled={tileJob?.running}>
+            {tileJob?.running ? `지도보관중 ${tileJob.done}/${tileJob.total}` : "지도보관"}
+          </button>
         </div>
       </header>
-
-      <p className="status" role="status" title={lastSync ? `Last sync ${lastSync}` : undefined}>
-        {bootError || statusText}
-      </p>
-
-      <div className="toolbar">
-        <label className="sr-only" htmlFor="search">
-          Search companies
-        </label>
-        <input
-          id="search"
-          className="search"
-          placeholder="Search companies"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === "Enter" && filtered[0]) select(filtered[0].id);
-          }}
-        />
-        <button className="btn" type="button" onClick={startAdd}>
-          Add company
-        </button>
-      </div>
-
-      <div className="offline-actions">
-        <button className="btn secondary" type="button" onClick={saveTiles} disabled={tileJob?.running}>
-          {tileJob?.running ? `Saving map ${tileJob.done}/${tileJob.total}` : "Save map for offline"}
-        </button>
-        <button className="btn secondary" type="button" onClick={sync}>
-          Sync
-        </button>
-      </div>
-      <p className="hint">
-        {tileJob?.message ||
-          "Companies stay in this browser. Map images are stored here after you save them or view them once."}
-      </p>
-
-      <div className="side-scroll">
-        <div className="chips" role="toolbar" aria-label="Filter by category">
+      <div className="side-stage">
+        <div className="chips" role="toolbar" aria-label="업종">
           <button type="button" aria-pressed={category === "all"} onClick={() => setCategory("all")}>
-            All
+            전체
           </button>
           {[...new Set(places.map((place) => place.category).filter(Boolean))]
             .sort((a, b) => a.localeCompare(b, "en"))
@@ -99,12 +91,13 @@ export function SidePanel() {
                 aria-pressed={category === item}
                 onClick={() => setCategory(item)}
               >
+                <span className={`dot cat-${categoryTone(item)}`} aria-hidden="true" />
                 {item}
               </button>
             ))}
         </div>
 
-        {!ready && !bootError && <p className="hint">Loading companies saved on this device…</p>}
+        {!ready && !bootError && <p className="hint">회사를 불러오는중입니다…</p>}
 
         {mode !== "view" && draft && (
           <PlaceForm
@@ -122,37 +115,69 @@ export function SidePanel() {
 
         {mode === "view" && selected && (
           <article className="detail">
-            <p>번호: {selected.companyNumber}</p>
-            <p>업종: {selected.category}</p>
-            <p>회사명: {selected.companyName}</p>
-            <p>종업원수: {selected.employeeCount.toLocaleString()} 명</p>
-            <p>주소: {selected.address}</p>
-            <p>위치: {selected.latitude.toFixed(5)}, {selected.longitude.toFixed(5)}</p>
+            <dl className="facts">
+              <div>
+                <dt>번호</dt>
+                <dd>{selected.companyNumber}</dd>
+              </div>
+              <div>
+                <dt>업종</dt>
+                <dd>
+                  <span className="pill">
+                    <span className={`dot cat-${categoryTone(selected.category)}`} aria-hidden="true" />
+                    {selected.category}
+                  </span>
+                </dd>
+              </div>
+              <div className="wide">
+                <dt>회사명</dt>
+                <dd className="fact-title">{selected.companyName}</dd>
+              </div>
+              <div className="wide">
+                <dt>종업원수</dt>
+                <dd>{selected.employeeCount.toLocaleString()} 명</dd>
+              </div>
+              <div className="wide">
+                <dt>주소</dt>
+                <dd>{selected.address}</dd>
+              </div>
+              <div className="wide">
+                <dt>위치</dt>
+                <dd className="coords">
+                  {selected.latitude.toFixed(5)}, {selected.longitude.toFixed(5)}
+                </dd>
+              </div>
+            </dl>
             <div className="form-actions">
               <button className="btn" type="button" onClick={startEdit}>
-                Edit
+                편집
               </button>
               {confirming ? (
                 <>
                   <button className="btn danger" type="button" onClick={removeSelected} disabled={busy}>
-                    Delete
+                    삭제
                   </button>
                   <button className="btn secondary" type="button" onClick={() => setConfirming(false)}>
-                    Keep
+                    취소
                   </button>
                 </>
               ) : (
                 <button className="btn danger" type="button" onClick={() => setConfirming(true)}>
-                  Delete
+                  삭제
                 </button>
               )}
             </div>
-            {confirming && <p className="hint">Delete this company from the map?</p>}
+            {confirming && <p className="confirm-note">회사를 지도에서 삭제하시겠습니까?</p>}
           </article>
         )}
-
+      </div>
+      <div className="side-scroll">
         <div className="list-head">
-          <h2>{query || category !== "all" ? `${filtered.length} of ${places.length}` : `${places.length} companies`}</h2>
+          <h2>회사목록</h2>
+          <p className="list-count">
+            {filtering ? `${filtered.length} / ${places.length}` : places.length}
+            <span> 회사</span>
+          </p>
         </div>
         <ul className="place-list">
           {filtered.map((place) => (
@@ -163,21 +188,23 @@ export function SidePanel() {
                 aria-current={place.id === selected?.id ? "true" : undefined}
                 onClick={() => select(place.id)}
               >
-                <span className={`dot cat-${categoryTone(place.category)}`} aria-hidden="true" />
-                <span>
-                  <span className="place-name">
-                    {place.companyNumber} · {place.companyName}
+                <span className={`swatch cat-${categoryTone(place.category)}`} aria-hidden="true" />
+                <span className="place-body">
+                  <span className="place-line">
+                    <span className="place-no">{place.companyNumber}</span>
+                    <span className="place-name">{place.companyName}</span>
                   </span>
                   <span className="place-meta">
-                    {place.category} · {place.employeeCount.toLocaleString()} 명
-                    {place.address ? ` · ${place.address}` : ""}
+                    <span>{place.category}</span>
+                    <span>{place.employeeCount.toLocaleString()} 명</span>
                   </span>
+                  {place.address ? <span className="place-address">{place.address}</span> : null}
                 </span>
               </button>
             </li>
           ))}
         </ul>
-        {ready && filtered.length === 0 && <p className="hint">No companies match.</p>}
+        {ready && filtered.length === 0 && <p className="hint">회사가 없습니다.</p>}
       </div>
     </aside>
   );

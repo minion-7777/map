@@ -170,12 +170,14 @@ async function ensureSchema(activePool) {
 
 async function seedPlaces(activePool) {
   const file = path.join(__dirname, "../../client/data/places.json");
-  const places = JSON.parse(fs.readFileSync(file, "utf8"));
+  const parsed = JSON.parse(fs.readFileSync(file, "utf8"));
+  const places = Array.isArray(parsed) ? parsed : [];
   const sql = `INSERT IGNORE INTO locations
     (id, company_number, category, company_name, employee_count, address, latitude, longitude, created_at, updated_at, deleted_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL)`;
   const stamp = toMysql(SEED_TIME);
   for (const place of places) {
+    if (!place?.id || place.companyNumber == null || !place.companyName) continue;
     await activePool.query(sql, [
       place.id,
       place.companyNumber,

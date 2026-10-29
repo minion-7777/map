@@ -32,10 +32,15 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   const request = event.request;
-  if (request.method !== "GET") return;
-
   const url = new URL(request.url);
-  if (url.pathname.startsWith("/api/")) return;
+
+  if (url.pathname.startsWith("/api/")) {
+    event.respondWith(forwardLocalApi(request));
+    return;
+  }
+
+  if (request.method !== "GET") return;
+  if (url.port === "3000") return;
 
   if (url.hostname === TILE_HOST) {
     event.respondWith(tileCache(request));
@@ -56,6 +61,20 @@ self.addEventListener("fetch", (event) => {
 
   event.respondWith(cacheFirst(request, SHELL_CACHE));
 });
+
+async function forwardLocalApi(request) {
+  const incoming = new URL(request.url);
+  const target = `http://127.0.0.1:4000${incoming.pathname}${incoming.search}`;
+  const init = { method: request.method, headers: new Headers(request.headers), redirect: "follow" };
+  if (request.method !== "GET" && request.method !== "HEAD") {
+    init.body = await request.arrayBuffer();
+  }
+  try {
+    return await fetch(target, init);
+  } catch {
+    return fetch(request);
+  }
+}
 
 async function tileCache(request) {
   const cache = await caches.open(TILE_CACHE);

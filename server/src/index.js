@@ -18,9 +18,21 @@ const port = Number(process.env.PORT || 4000);
 const serveWeb = process.argv.includes("--web");
 const webDir = path.join(__dirname, "../../client/out");
 
+app.use((req, res, next) => {
+  if (req.headers["access-control-request-private-network"] === "true") {
+    res.setHeader("Access-Control-Allow-Private-Network", "true");
+  }
+  next();
+});
 app.use(
   cors({
-    origin: ["http://localhost:3000", "http://127.0.0.1:3000"],
+    origin(origin, callback) {
+      if (!origin || /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
+        callback(null, true);
+        return;
+      }
+      callback(null, false);
+    },
   })
 );
 app.use(express.json({ limit: "1mb" }));

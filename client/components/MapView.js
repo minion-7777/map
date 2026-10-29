@@ -166,9 +166,15 @@ export default function MapView() {
             }}
           >
             {selected && mode === "view" && (
-              <Tooltip permanent direction="top" offset={[0, -12]} className="place-tip">
-                <span className="tip-title">{place.companyName}</span>
-                <span className="tip-zh">No. {place.companyNumber}</span>
+              <Tooltip permanent direction="top" offset={[0, -14]} className="place-tip">
+                <span>번호: {place.companyNumber}</span>
+                <span>업종: {place.category}</span>
+                <span>회사명: {place.companyName}</span>
+                <span>종업원수: {place.employeeCount.toLocaleString()} 명</span>
+                <span>주소: {place.address}</span>
+                <span>
+                  위치: {place.latitude.toFixed(5)}, {place.longitude.toFixed(5)}
+                </span>
               </Tooltip>
             )}
           </Marker>

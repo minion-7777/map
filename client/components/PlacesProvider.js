@@ -65,10 +65,13 @@ export function PlacesProvider({ children }) {
     try {
       const result = await syncNow();
       if (!mounted.current) return;
-      if (result.offline) setSyncError("");
-      else if (!result.ok) {
-        setSyncError(result.message || "Can't reach the server. Changes stay on this device.");
-      } else setSyncError("");
+      if (result.ok) {
+        setOnline(true);
+        setSyncError("");
+      } else {
+        setOnline(result.reachable !== false);
+        setSyncError(result.message || "Can't reach MySQL. Changes stay on this device.");
+      }
       await refresh();
     } finally {
       syncCount.current -= 1;
@@ -78,8 +81,6 @@ export function PlacesProvider({ children }) {
 
   useEffect(() => {
     mounted.current = true;
-    setOnline(navigator.onLine);
-
     (async () => {
       try {
         await ensureSeed(buildSeed());
@@ -94,12 +95,10 @@ export function PlacesProvider({ children }) {
     })();
 
     const onOnline = () => {
-      setOnline(true);
       sync();
     };
     const onOffline = () => {
-      setOnline(false);
-      setSyncError("");
+      sync();
     };
     const onController = () => {
       if (sessionStorage.getItem("dandong-sw") === "1") return;
@@ -109,10 +108,10 @@ export function PlacesProvider({ children }) {
     window.addEventListener("online", onOnline);
     window.addEventListener("offline", onOffline);
     const timer = window.setInterval(() => {
-      if (navigator.onLine) sync();
+      sync();
     }, 20000);
 
-    if (process.env.NODE_ENV === "production" && "serviceWorker" in navigator) {
+    if ("serviceWorker" in navigator) {
       navigator.serviceWorker.addEventListener("controllerchange", onController);
       navigator.serviceWorker.register("/sw.js").catch(() => {});
     }
@@ -155,16 +154,11 @@ export function PlacesProvider({ children }) {
   const statusText = useMemo(() => {
     if (!online) {
       return pending
-        ? `Offline. ${plural(pending, "change")} saved on this device.`
-        : "Offline. Showing companies saved on this device.";
+        ? `MySQL에 련결되지 않았습니다. ${plural(pending, "change")}는 이 장치에 보관되어 있습니다.`
+        : "MySQL에 련결되지 않았습니다.";
     }
     if (syncing && pending) return `Syncing ${plural(pending, "change")}…`;
     if (syncing) return "Syncing…";
-    if (syncError) {
-      return pending ? `${plural(pending, "change")} saved on this device. ${syncError}` : syncError;
-    }
-    if (pending) return `${plural(pending, "change")} waiting to sync.`;
-    if (lastSync) return "Synced with MySQL.";
     return "Saved on this device.";
   }, [online, pending, syncing, syncError, lastSync]);
 
@@ -344,7 +338,6 @@ export function PlacesProvider({ children }) {
     online,
     pending,
     syncing,
-    statusText,
     lastSync,
     query,
     setQuery,

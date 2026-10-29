@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata = {
   title: "Dandong Map",
-  description: "An offline map of companies in Dandong, on the Yalu River.",
+  description: "단동회사목록 조회 및 등록 ",
   manifest: "/manifest.webmanifest",
   icons: { icon: "/icon.svg" },
 };

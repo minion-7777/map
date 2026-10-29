@@ -30,8 +30,8 @@ npm run build
 npm start
 ```
 
-Open http://localhost:4000 once while online. Click **Save map for offline**. After that, the page, the companies, and the saved map images still work with the network off.
+The Dandong street map is stored in this project and loaded from this computer, so the map does not need an internet connection. Click **지도보관** once if you also want those images kept inside the browser.
 
-Add, edit, delete, and search all write to this browser first. **Sync** sends them to MySQL. If two copies of a company both changed, the later edit wins.
+Add, edit, delete, and search write to this browser first, then to local MySQL. That save does not need an internet connection. **Sync** sends anything still waiting. If two copies of a company both changed, the later edit wins.
 
 Dragging a selected pin updates its location.

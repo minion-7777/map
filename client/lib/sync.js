@@ -12,10 +12,6 @@ export function syncNow() {
 }
 
 async function syncOnce() {
-  if (typeof navigator !== "undefined" && navigator.onLine === false) {
-    return { ok: false, offline: true };
-  }
-
   try {
     let followUp = false;
     let serverTime = null;
@@ -30,25 +26,57 @@ async function syncOnce() {
     }
     return { ok: true, serverTime, followUp };
   } catch {
-    return { ok: false, message: "Can't reach the server. Changes stay on this device." };
+    return {
+      ok: false,
+      reachable: false,
+      message: "Can't reach MySQL. Changes stay on this device.",
+    };
   }
+}
+
+const LOCAL_API = "http://127.0.0.1:4000";
+
+async function postSync(body) {
+  const targets = [`${LOCAL_API}/api/sync`, "/api/sync"];
+  let lastError = null;
+  for (const target of targets) {
+    try {
+      return await fetch(target, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+        cache: "no-store",
+      });
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  throw lastError || new Error("Can't reach MySQL.");
 }
 
 async function pushAndPull() {
   const since = await getMeta("lastSync");
-  const entries = await listOutbox();
   const all = await listAllPlaces();
-  const byId = new Map(all.map((place) => [place.id, place]));
-  const pushed = entries.map((entry) => byId.get(entry.id)).filter(Boolean);
+  const localPlaces = all.filter((place) => place?.id && place.companyNumber != null);
+  const pushed = localPlaces.slice(0, 200);
 
-  const response = await fetch("/api/sync", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ since, pushed }),
-  });
+  let response;
+  try {
+    response = await postSync({ since, pushed });
+  } catch {
+    return {
+      ok: false,
+      reachable: false,
+      message: "Can't reach MySQL. Changes stay on this device.",
+    };
+  }
 
   if (!response.ok) {
-    return { ok: false, message: await readError(response) };
+    return {
+      ok: false,
+      reachable: response.status !== 503,
+      message: await readError(response),
+    };
   }
 
   const data = await response.json();
@@ -80,11 +108,13 @@ async function pushAndPull() {
     return { ok: false, message: data.rejected[0].error || "A place could not be synced." };
   }
   const stillPending = await listOutbox();
-  const followUp = stillPending.some((entry) => {
-    const sent = pushed.find((place) => place.id === entry.id);
-    return !sent || sent.updatedAt !== entry.updatedAt;
-  });
-  return { ok: true, serverTime: data.serverTime, followUp };
+  const followUp =
+    localPlaces.length > pushed.length ||
+    stillPending.some((entry) => {
+      const sent = pushed.find((place) => place.id === entry.id);
+      return !sent || sent.updatedAt !== entry.updatedAt;
+    });
+  return { ok: true, reachable: true, serverTime: data.serverTime, followUp };
 }
 
 async function readError(response) {

@@ -18,10 +18,10 @@ function MapChrome() {
   const { online, mode, draft, showCity } = usePlaces();
   return (
     <div className="map-status">
-      {!online && <span className="chip chip-off">Offline</span>}
-      {mode === "add" && draft?.latitude == null && <span className="chip">Click the map to set the location</span>}
+      {!online && <span className="chip chip-off">오프라인</span>}
+      {mode === "add" && draft?.latitude == null && <span className="chip">지도를 눌러 위치를 정하십시오</span>}
       <button type="button" className="home-btn" onClick={showCity}>
-        Center on Dandong
+        단동 중심
       </button>
     </div>
   );
